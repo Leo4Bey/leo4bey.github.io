@@ -1,0 +1,1288 @@
+"use strict";
+
+/*
+ * Namespace
+ */
+if (typeof pg === 'undefined') var pg = {};
+if (!pg.cui) pg.cui = {};
+
+var bootstrapJQuery = jQuery;
+if (typeof A4J !== 'undefined') {
+	bootstrapJQuery.noConflict(true);
+}
+
+/*
+ * Glowne funkcje portalu
+ */
+pg.cui.js = {
+	parseTime: function(seconds) {
+		var min = Math.floor(seconds / 60);
+		var sMin = (min < 10) ? "0" + min : "" + min;
+		var sec = seconds % 60;
+		var sSec = (sec < 10) ? "0" + sec : "" + sec;
+		return 	sMin + ":" + sSec;
+	},
+
+	formatReleaseMsg: function(msg) {
+		return msg.replace("{0}", "<span id=\"release-warning-counter\"></span>")
+			      .replace("{1.1}", "<a href='/signout'>")
+			      .replace("{1.2}", "</a>")
+	              .replace("{br}", "</br>");
+	},
+
+	releaseCountdown: function() {
+		try {
+			console.debug('Run releaseCountdown');
+			pg.cui.js.globals.releaseCountDownOn = true;
+			bootstrapJQuery("#release-warning-modal").removeClass(pg.cui.js.globals.releaseLogout ? "alert-warning" : "alert-danger");
+			bootstrapJQuery("#release-warning-modal").addClass(pg.cui.js.globals.releaseLogout ? "alert-danger" : "alert-warning");
+			var currentTime = (new Date()).getTime();
+			if (pg.cui.js.globals.releaseCounter < currentTime) {
+				if ("hard" === pg.cui.js.globals.releaseLogout) {
+					if (pg.cui.js.globals.releasePageUrl !== window.location.pathname) {
+						window.location.replace(pg.cui.js.globals.signoutUrl + "?autologout");
+					}
+				} else if ("soft" === pg.cui.js.globals.releaseLogout) {
+					window.location.replace(pg.cui.js.globals.signoutUrl + "?warn=AUTO_LOGOUT");
+				} else {
+					console.debug('Stopping releaseCountdown: no nogout requested');
+					pg.cui.js.globals.releaseCountDownOn = false;
+					bootstrapJQuery("#release-warning-msg").html(pg.cui.js.formatReleaseMsg(pg.cui.js.globals.releaseMsgAfter));
+					bootstrapJQuery("#release-warning-modal").show().attr("aria-hidden", "false");
+				}
+			} else if ((pg.cui.js.globals.releaseCounter - currentTime) > (10 * 60 * 1000)) {
+				console.debug('Stopping releaseCountdown: release too far in future');
+				pg.cui.js.globals.releaseCountDownOn = false;
+				bootstrapJQuery("#release-warning-modal").hide().attr("aria-hidden", "true");
+			} else {
+				bootstrapJQuery("#release-warning-msg").html(pg.cui.js.formatReleaseMsg(pg.cui.js.globals.releaseMsgBefore));
+				bootstrapJQuery("#release-warning-modal").show().attr("aria-hidden", "false");
+				bootstrapJQuery("#release-warning-counter").html(pg.cui.js.parseTime(Math.floor((pg.cui.js.globals.releaseCounter - currentTime) / 1000)));
+				window.setTimeout("pg.cui.js.releaseCountdown()", 1000);
+			}
+		} catch (oErr) {
+			console.error("pg.cui.js.releaseCountdown: " + oErr.message);
+		}
+	},
+
+	releaseWarning: function() {
+		var result = null;
+		var dNow = null;
+		var dMmaintenanceTime = null;
+		var nSeconds = null;
+		var sLogout = null;
+		var sMsgBefore = null;
+		var sMsgAfter = null;
+		try {
+			var ajax = new XMLHttpRequest();
+			ajax.open("GET", "/rest/maintenance?timestamp=" + new Date().getTime(), true); // bypass cache
+			ajax.onload = function(response){
+				try {
+					if (response == null || !response || response.target.status !== 200) {
+						console.debug("Skipping start releaseCountdown: invalid response");
+						return false;
+					}
+					if (this.responseText.length < 100 || this.responseText.length > 160) {
+						console.debug("Skipping start releaseCountdown: invalid size");
+						return false;
+					}
+					result = JSON.parse(this.responseText);
+					dNow = new Date();
+					dMmaintenanceTime = new Date(result.maintenanceTime);
+					if (isNaN(dMmaintenanceTime)) {
+						console.debug("Skipping start releaseCountdown: invalid date");
+						return false;
+					}
+					sLogout = result.logoutMode !== undefined ? result.logoutMode.toLowerCase() : null;
+					if (!["none", "soft", "hard"].includes(sLogout)) {
+						console.debug("Skipping start releaseCountdown: invalid logout mode");
+						return false;
+					}
+					sMsgBefore = pg.cui.js.globals.msg[result.msgIdBefore];
+					sMsgAfter = pg.cui.js.globals.msg[result.msgIdAfter];
+					if (sMsgBefore === undefined || sMsgAfter === undefined) {
+						console.debug("Skipping start releaseCountdown: invalid release message ids");
+						return false;
+					}
+					sMsgBefore = sMsgBefore.replace(/['"<>&]+/g, '');
+					sMsgAfter = sMsgAfter.replace(/['"<>&]+/g, '');
+					nSeconds = dMmaintenanceTime.getTime() - dNow.getTime();
+					pg.cui.js.globals.releaseCounter = (new Date()).getTime() + nSeconds;
+					if (!pg.cui.js.globals.releaseCountDownOn && nSeconds <= (10 * 60 * 1000)) {
+						console.debug("Starting releaseCountdown");
+						pg.cui.js.globals.releaseLogout = sLogout;
+						pg.cui.js.globals.releaseMsgBefore = sMsgBefore;
+						pg.cui.js.globals.releaseMsgAfter = sMsgAfter;
+						pg.cui.js.releaseCountdown();
+					} else {
+						console.debug("Skipping start releaseCountdown");
+					}
+				} catch (oErrAjax) {
+					console.error("pg.cui.js.releaseWarning.onSuccess: " + oErrAjax.message);
+				}
+			};
+			ajax.send();
+		} catch (oErr) {
+			console.error("pg.cui.js.releaseWarning: " + oErr.message);
+		} finally {
+			window.setTimeout("pg.cui.js.releaseWarning()", 60 * 1000);
+		}
+	},
+
+	releaseRefresh: function() {
+		setTimeout(function() {window.location.replace(pg.cui.js.globals.signoutUrl);}, 5 * 60 * 1000);
+	},
+
+	displayTimeoutAlert: function() {
+		window.location.replace(pg.cui.js.globals.signoutUrl + '?warn=AUTO_LOGOUT');
+	},
+
+	displayExceptionAlert: function(code) {
+		code = (typeof code === 'undefined' || code === null) ? '' : ('?code=' + code);
+		window.location.replace('/faces/pages/error.xhtml' + code);
+	},
+
+	countdown: function() {
+		var currentTime = (new Date()).getTime();
+		if (pg.cui.js.globals.timeoutCounter < currentTime) {
+			bootstrapJQuery('.pg_cui_session_counter').html("00:00");
+			window.location.replace(pg.cui.js.globals.signoutUrl + '?warn=AUTO_LOGOUT');
+			return;
+		}
+		window.setTimeout('pg.cui.js.countdown()', 1000);
+		var count = Math.floor((pg.cui.js.globals.timeoutCounter - currentTime) / 1000);
+		if (pg.cui.js.globals.timeoutWindowVisible && count <= pg.cui.js.globals.jsfSessionTimeoutShowWindow &&
+			!pg.cui.js.isVisibleOnScreen(bootstrapJQuery(pg.cui.js.globals.jsfSessionCounterWindowClass)))
+		{
+			if (pg.cui.js.globals.timeoutWindowVisibleNow === false) {
+				pg.cui.js.globals.timeoutWindowVisibleNow = true;
+				bootstrapJQuery(pg.cui.js.globals.jsfSessionCounterWarningWindowClass).css('display', 'flex');
+			}
+		} else if (pg.cui.js.globals.timeoutWindowVisibleNow === true) {
+			pg.cui.js.globals.timeoutWindowVisibleNow  = false;
+			bootstrapJQuery(pg.cui.js.globals.jsfSessionCounterWarningWindowClass).css('display', 'none');
+		}
+		bootstrapJQuery('.pg_cui_session_counter').html(pg.cui.js.parseTime(count));
+	},
+
+	getTimeout: function() {
+		return (new Date()).getTime() + (pg.cui.js.globals.sessionTimeout * 1000);
+	},
+
+	isVisibleOnScreen: function(elem) {
+		var $elem = bootstrapJQuery(elem);
+		if($elem.length === 0) {return false;}
+		var docViewTop = bootstrapJQuery(window).scrollTop();
+		var docViewBottom = docViewTop + bootstrapJQuery(window).height();
+		var elemTop = $elem.offset().top;
+		var elemBottom = elemTop + $elem.height();
+		if(docViewBottom >= elemBottom ) {
+			if(elemTop >= docViewTop) {
+				return true;
+			}
+		}
+		return false;
+	},
+
+	onSessionRefreshed: function(ev) {
+		if (ev === undefined || ev.type !== 'storage') {
+			try {
+				// zapis nie odpali zdarzenia za każdym razem, ale to nie jest konieczne
+				console.log('session counter reset in own tab or window');
+				localStorage.setItem(pg.cui.js.globals.syncCtrMessage, JSON.stringify(window.performance.now()));
+			} catch(err) {
+				// nieużyteczne localStorage albo performance.now()
+			}
+		} else {
+			console.log('session counter reset in other tab or window');
+			pg.cui.js.resetSessionCounter();
+		}
+	},
+
+	checkMultiTab: () => {
+		const strippedPath = window.location.pathname.replace(/\/$/, "");
+		if (strippedPath !== "" && strippedPath !== "/auth" && !strippedPath.startsWith("/faces")) {
+			const localStorageOpenKey = pg.cui.js.globals.syncMultiTabOpenMessage + "." + strippedPath;
+			const localStorageReplyKey = pg.cui.js.globals.syncMultiTabReplyMessage + "." + strippedPath;
+			window.addEventListener('storage', (ev) => {
+				if (ev.key === localStorageOpenKey) {
+					localStorage.setItem(localStorageReplyKey, Date.now().toString());
+				} else if (ev.key === localStorageReplyKey) {
+					window.location.href = '/faces/pages/multiTab.xhtml';
+				}
+			});
+			localStorage.setItem(localStorageOpenKey, Date.now().toString());
+		}
+	},
+
+	onUserAction: function (ev) {
+		if (ev.type !== 'storage') {
+			try {
+				// zapis nie odpali zdarzenia za każdym razem, ale to nie jest konieczne
+				localStorage.setItem(pg.cui.js.globals.syncActMessage, JSON.stringify(window.performance.now()));
+			} catch(err) {
+				// nieużyteczne localStorage albo performance.now()
+			}
+		} else {
+			console.log('user action in other tab or window');
+		}
+		var currentTime = (new Date()).getTime();
+		if (currentTime - pg.cui.js.globals.ajaxTime > 300 * 1000) {
+			try {
+				if (typeof pg_cui_ajaxRefresh === 'function') {
+					pg_cui_ajaxRefresh();
+				}
+				pg.cui.js.globals.ajaxTime = (new Date()).getTime();
+			} catch(err) {
+				console.error("pg.cui.js.onUserAction: " + err.message);
+			}
+		}
+	},
+
+	configureOnSessionRefreshed: function() {
+		bootstrapJQuery(document).arrive('#form_menu #session_counter', function() {
+			pg.cui.js.onSessionRefreshed();
+		});
+		window.addEventListener('storage', function(ev) {
+			if (ev.key === pg.cui.js.globals.syncCtrMessage) {
+				pg.cui.js.onSessionRefreshed(ev);
+			}
+		});
+	},
+
+	configureOnUserAction: function() {
+		var $document = bootstrapJQuery(document);
+		$document.keyup(pg.cui.js.onUserAction);
+		$document.mousemove(pg.cui.js.onUserAction);
+		$document.arrive('.mceIframeContainer iframe', function() {
+			const $tinymce = bootstrapJQuery(this).contents().find('#tinymce').parent().parent();
+			$tinymce.keyup(pg.cui.js.onUserAction);
+			$tinymce.mousemove(pg.cui.js.onUserAction);
+		});
+		window.addEventListener('storage', function(ev) {
+			if (ev.key === pg.cui.js.globals.syncActMessage) {
+				pg.cui.js.onUserAction(ev);
+			}
+		});
+	},
+
+	resetSessionCounter: function() {
+		pg.cui.js.globals.timeoutCounter = pg.cui.js.getTimeout();
+		pg.cui.js.globals.ajaxTime = (new Date()).getTime();
+		bootstrapJQuery('.pg_cui_session_counter').html(pg.cui.js.parseTime(pg.cui.js.globals.sessionTimeout));
+	},
+
+	configureSessionCounter: function() {
+		if (typeof A4J !== 'undefined') {
+			A4J.AJAX.AddListener({
+				onafterajax: function (req, domEvt, data) {
+					pg.cui.js.resetSessionCounter();
+				}
+			});
+		} else if (typeof PrimeFaces !== 'undefined') {
+			bootstrapJQuery(document).on('pfAjaxComplete', function(evt){
+				pg.cui.js.resetSessionCounter();
+			});
+		}
+		pg.cui.js.resetSessionCounter();
+		pg.cui.js.countdown();
+		pg.cui.js.configureOnSessionRefreshed();
+		pg.cui.js.configureOnUserAction();
+	},
+
+	onHelpClick: function() {
+		var header = bootstrapJQuery('.portlet-menu .menu-tabs span.active');
+		var tab = bootstrapJQuery('.portlet-menu .menu-tabs a.initial');
+		var subtab = bootstrapJQuery('.portlet-menu .menu-items .active .active');
+		var helpUrl = pg.cui.js.globals.helpUrl;
+
+		if (subtab.attr('data-help-url') != null) {
+			helpUrl = subtab.attr('data-help-url');
+		} else if (tab.attr('data-help-url') != null) {
+			helpUrl = tab.attr('data-help-url');
+		} else if (header.attr('data-help-url') != null) {
+			helpUrl = header.attr('data-help-url');
+		}
+
+		document.getElementById('pgTopLevelHelpLink').href = helpUrl;
+	}
+};
+
+/*
+ * Zmienne globalne
+ */
+pg.cui.js.globals = {
+	userLoggedIn: "",
+	currentLang: "",
+	contextPath: "",
+	// parametry okienka serwisowego
+	releaseCounter: 0,
+	releaseCountDownOn: false,
+	releasePageUrl: "/faces/pages/release.xhtml",
+	releaseLogout: false,
+	releaseMsgBefore: "",
+	releaseMsgAfter: "",
+	// url wylogowania
+	signoutUrl: "",
+	sessionTimeout: 1200,
+	// licznik konca sesji
+	timeoutCounter: 0,
+	// czy ma być widoczne okienko z ostrzeżeniem o końcu sesji
+	timeoutWindowVisible: true,
+	// aktualny stan okna
+	timeoutWindowVisibleNow: false,
+	// określa moment pojawienia się ostrzeżenia o końcu sesji(pozostałe sekundy do końca sesji)
+	jsfSessionTimeoutShowWindow: 60,
+	// klasa standardowego licznika sesji
+	jsfSessionCounterWindowClass: '.pg_cui_session_counter_window',
+	// klasa okienka z ostrzeżeniem o końcu sesji, pokazywanego, jeśli standardowy licznik poza ekranem
+	jsfSessionCounterWarningWindowClass: '.pg_cui_session_counter_warning_window',
+	// data ostatniego żadania AJAX-owego
+	ajaxTime: (new Date()).getTime(),
+	// nazwa zmiennej localStorage do synchronizacji stanu aktywności użytkownika między kartami
+	syncActMessage: 'pg.cui.js.globals.ajaxTime.sync.act.msg',
+	// nazwa zmiennej localStorage do synchronizacji licznika sesji między kartami
+	syncCtrMessage: 'pg.cui.js.globals.ajaxTime.sync.ctr.msg',
+	// nazwa zmiennej localStorage do informowania o załadowaniu strony
+	syncMultiTabOpenMessage: 'pg.cui.js.globals.ajaxTime.sync.multiTabOpen.msg',
+	// nazwa zmiennej localStorage do odpowiedzi z innych zakładek o konflikcie
+	syncMultiTabReplyMessage: 'pg.cui.js.globals.ajaxTime.sync.multiTabReply.msg',
+	// łącze do strony startowej pomocy dla portalu
+	helpUrl: "",
+	// mapa klucz-przetłumaczony komunikat okienka serwisowego
+	msg: {},
+	// domyślna maksymalna długość tekstu, jeśli nie podano długości dla limitText(this), undefined znaczy nieograniczona!
+	limitTextDefaultLimit: undefined
+};
+
+/*
+ * Konfiguracja portalu
+ */
+pg.cui.js.configuration = {
+	contextRoot: "",
+	helpType: ""
+};
+
+/*
+ * Funkcje pomocnicze
+ */
+pg.cui.js.utils = {
+	/**
+	 * Zaznacza wiersz w tabeli rich:dataTable
+	 */
+	smartHighlightRow: function(link) {
+		if (link && link.parentNode && link.parentNode.parentNode && link.parentNode.parentNode.parentNode) {
+			var nodeList = link.parentNode.parentNode.parentNode.childNodes;
+			for(var i=0; i < nodeList.length; i++){
+				nodeList[i].style.backgroundColor = '#FFFFFF';
+			}
+			link.parentNode.parentNode.style.backgroundColor = '#FFFF00';
+		}
+	},
+
+	/**
+	 * Zaznacza wszystkie elementy typu checkbox zawarte w formularzu
+	 * @param element - element typu input zawart w formularzu
+	 * @param checked - określa czy zaznaczyć lub odznaczyć pola
+	 * @param formId - identyfikator formularza
+	 * @param color - kolor zaznaczenia
+	 */
+	checkUncheckAll: function(element, checked, formId, color)
+	{
+		var theForm = element.form;
+		if (!theForm) {
+			theForm = document.getElementById(formId);
+		}
+
+		for (var i = 0; i < theForm.length; i++) {
+			if(theForm[i].type == 'checkbox' && theForm[i].id !== element.id && !theForm[i].disabled && 'skipSelect' !== theForm[i].className){
+				theForm[i].checked = checked;
+				if (color) {
+					var item = theForm[i].parentNode.parentNode;
+					for (var j=0; j< item.childNodes.length; j++)
+					{
+						item.childNodes[j].style.backgroundColor = color;
+					}
+				}
+			}
+		}
+	},
+
+	checkUncheckItem: function(element, color)
+	{
+		var item = element.parentNode.parentNode;
+		for (var j=0; j< item.childNodes.length; j++)
+		{
+			if (!element.checked) {
+				item.childNodes[j].style.backgroundColor = '';
+			} else {
+				item.childNodes[j].style.backgroundColor = color;
+			}
+		}
+
+	},
+
+	fireDefaultButton: function(defaultButtonId, event) {
+		if (event.keyCode === 13 && !(event.srcElement && (event.srcElement.tagName.toLowerCase() === "textarea"))) {
+			var defaultButton;
+			var nonMSDOMBrowser;
+			try {
+				nonMSDOMBrowser = (window.navigator.appName.toLowerCase().indexOf("explorer") === -1);
+			} catch (e) {
+				console.error("pg.cui.js.utis.fireDefaultButton: " + e.message);
+			}
+
+			if (nonMSDOMBrowser) {
+				defaultButton = document.getElementById(defaultButtonId);
+			}
+			else {
+				defaultButton = document.all[defaultButtonId];
+			}
+			if (defaultButton && typeof(defaultButton.click) !== "undefined") {
+				defaultButton.click();
+				event.cancelBubble = true;
+				if (event.stopPropagation) event.stopPropagation();
+				return false;
+			}
+			else if(defaultButton && typeof(defaultButton.click) === "undefined"){
+				var clickevent=document.createEvent("MouseEvents");
+				clickevent.initEvent("click", true, true);
+				defaultButton.dispatchEvent(clickevent);
+				event.cancelBubble = true;
+				if (event.stopPropagation) event.stopPropagation();
+				return false;
+			}
+		}
+		return true;
+	},
+
+
+	isNumberKey: function(evt)
+	{
+		var charCode = (evt.which) ? evt.which : event.keyCode;
+		return !(charCode > 31 && (charCode < 48 || charCode > 57));
+	},
+
+	isDateKey: function(evt) {
+		var charCode = (evt.which) ? evt.which : event.keyCode;
+		return (this.isNumberKey(evt) || (charCode === 190));
+	},
+
+	clearForm: function(oForm) {
+		var elements = oForm.elements;
+		var i;
+		for(i = 0; i<elements.length; i++) {
+			const field_type = elements[i].type.toLowerCase();
+			switch(field_type) {
+				case "text": elements[i].value = "";
+					break;
+				case "password":
+					break;
+				case "textarea":
+					break;
+				case "hidden":
+					break;
+				case "radio":
+					break;
+				case "checkbox":
+					if (elements[i].checked) {
+						elements[i].checked = false;
+					}
+					break;
+				case "select-one":
+					elements[i].selectedIndex = 0;
+					break;
+				case "select-multi":
+					elements[i].selectedIndex = 0;
+					break;
+				default:
+					break;
+			}
+		}
+	},
+
+	areCookiesEnabled: function() {
+		var cookieEnabled = false;
+		var isMSIE = /*@cc_on!@*/0;
+		if (!isMSIE) {
+			cookieEnabled = (navigator.cookieEnabled) ? true : false;
+		}
+		if (isMSIE || (typeof navigator.cookieEnabled === "undefined" && !cookieEnabled))
+		{
+			document.cookie="testcookie";
+			cookieEnabled = (document.cookie.indexOf("testcookie") !== -1);
+		}
+		return cookieEnabled;
+	},
+
+	doPost: function(toUrl, params) {
+		var myForm = document.createElement("form");
+		myForm.method="post" ;
+		myForm.action = toUrl;
+		for (var k in params) {
+			var myInput = document.createElement("input") ;
+			myInput.setAttribute("name", k) ;
+			myInput.setAttribute("value", params[k]);
+			myForm.appendChild(myInput) ;
+		}
+		document.body.appendChild(myForm) ;
+		myForm.submit();
+		document.body.removeChild(myForm);
+	}
+};
+
+/*
+ * Funkcje pozostałe - bez namespace
+ */
+function limitText(limitField, limitNum) {
+	if (limitNum === undefined) {
+		limitNum = pg.cui.js.globals.limitTextDefaultLimit;
+	}
+	if (limitField.value.length > limitNum) {
+		limitField.value = limitField.value.substring(0, limitNum);
+	}
+}
+
+function openMenuTab(element, pin) {
+	// Tabs
+	var $element = bootstrapJQuery(element);
+	var wasClosed = ! $element.hasClass('open');
+	bootstrapJQuery('.menu-tabs a').removeClass('active open');
+	$element.addClass('active');
+	if (pin === undefined) {
+		pin = true;
+	}
+	if (pin) {
+		$element.addClass('pinned');
+	}
+	// Subtabs
+	bootstrapJQuery('.menu-tabs .mobile-dd').removeAttr('style');
+	bootstrapJQuery('.menu-items > div').css('display', 'none');
+	var rel = element.getAttribute('rel');
+	var direction = bootstrapJQuery('#menu-tabs').css('flex-direction');
+	if (rel !== null && (wasClosed || direction === 'row')) {
+		bootstrapJQuery('.' + rel).css('display', 'flex');
+		$element.addClass('open');
+	}
+	if (direction === 'row') {
+		element.blur();
+	}
+}
+
+/************************************************************************
+ * Funkcje tylko dla RichFaces albo PrimeFaces
+ */
+if (typeof A4J !== 'undefined') {
+
+	/**
+	 * Akcja na przeterminowanie widoku.
+	 * Dla PrimeFaces jest <p:ajaxExceptionHandler> w szablonie main.xhtml
+	 */
+	A4J.AJAX.onExpired = function(loc, expiredMsg) {
+		pg.cui.js.displayTimeoutAlert();
+	};
+
+	/**
+	 * Akcja na błąd serwera.
+	 */
+	A4J.AJAX.onError = function (req, status, message) {
+		if (status === 520) {
+			try {
+				pg.cui.js.displayExceptionAlert(req.getResponseText());
+			} catch (err) {
+				// Jak już nic się nie uda.
+				window.alert("Error " + req.getResponseText());
+			}
+		}
+	};
+
+	/**
+	 * Blokowanie UI przy okazji żądań AJAX-owych.
+	 * PrimeFaces oferuje własne blokowanie.
+	 */
+	var pgCuiBlockUI = (function() {
+
+		/* to ustawiamy w portal_style.css */
+		delete jQuery.blockUI.defaults.css.backgroundColor;
+		delete jQuery.blockUI.defaults.css.border;
+		delete jQuery.blockUI.defaults.css.color;
+
+		var lockVariable = /pgcui_blocking/;
+		var blockUIconfig = {
+			message: "<h1>Komunikat</h1>",
+			css: {
+				cursor: 'default'
+			},
+			overlayCSS: {
+				background: "#d0d0d0",
+				cursor: 'default',
+				opacity: 0.3
+			}
+		};
+		var _lockUI = function() {
+			jQuery(".updateProgressOld").hide();
+			jQuery.blockUI(blockUIconfig);
+		};
+		var _unlockUI = function() {
+			jQuery.unblockUI();
+			setTimeout(function(){
+				jQuery(".updateProgressOld").show();
+			}, 100);
+		};
+
+		XMLHttpRequest.prototype.oldOpen = XMLHttpRequest.prototype.open;
+		XMLHttpRequest.prototype.method;
+		XMLHttpRequest.prototype.lockUI = false;
+
+		XMLHttpRequest.prototype.open = function() {
+
+			this.method = arguments['0'];
+
+			if ( typeof arguments['0'] === "string") {
+				if ( lockVariable.test(arguments['1'].toString()) ) {
+					this.lockUI = true;
+				}
+			}
+
+			this.oldOpen.apply(this, arguments);
+		};
+
+		XMLHttpRequest.prototype.oldSend = XMLHttpRequest.prototype.send;
+		XMLHttpRequest.prototype.send = function(){
+
+			if ( !this.lockUI && typeof arguments['0'] === "string" ) {
+				if ( lockVariable.test(arguments['0'].toString()) ) {
+					this.lockUI = true;
+				}
+			}
+
+			var rsc = this.onreadystatechange;
+			if (rsc) {
+				this.onreadystatechange = function () {
+					if (this.readyState === 4) {
+						_unlockUI();
+					}
+					return rsc.apply(this, arguments);
+				};
+				if ( this.lockUI ) {
+					_lockUI();
+				}
+			}
+			this.oldSend.apply(this, arguments);
+		};
+
+
+		// public function
+		return {
+			setMessage: function(msg) {
+				blockUIconfig.message = msg;
+			}
+		}
+	})();
+} else if (typeof PrimeFaces !== 'undefined') {
+
+	/**
+	 * Poprawki do https://github.com/primefaces/primefaces/blob/master/primefaces/src/main/resources/META-INF/resources/primefaces/locales/locale-pl.js
+ 	 */
+	PrimeFaces.locales['pl'].yearSuffix = PrimeFaces.locales['pl_PL'].yearSuffix = '';
+
+	/**
+	 * Akcja na błąd serwera - ale tylko błąd HTTP.
+	 * Błędy sieci (np. zerwane połączenie) są tutaj ignorowane i obsługiwane przez wywołujący kod.
+	 * Pozostałymi błędami zajmuje się <p:ajaxExceptionHandler> w szablonie main.xhtml.
+	 */
+	bootstrapJQuery(document).on('pfAjaxError.' + this.id, function(e, xhr, settings) {
+		if (xhr.status > 0 && xhr.status !== 200) {
+			pg.cui.js.displayExceptionAlert(xhr.status);
+		}
+	});
+
+	/**
+	 * Otwarcie okienka do wpisania kodu kreskowego - jeśli takie istnieje
+	 */
+	document.addEventListener('keydown',
+		function(e) {
+			if ((e.keyCode === 120) && (typeof openBarcodePanel !== 'undefined')) {
+				openBarcodePanel();
+			}
+		}, true
+	);
+}
+
+/************************************************************************
+ * przeniesione z głownego szablonu (main.xhtml)
+ */
+const server_base_url="/";
+const view_state = "0";
+
+/************************************************************************
+ * Podmiana wybranych ikonek svg na wersje wbudowane w kod strony.
+ * To umożliwia stylowanie poszczególnych elementów tych ikonek.
+ */
+bootstrapJQuery(document).arrive('img.svg-to-replace', function(){
+	bootstrapJQuery(this).filter(function() {
+		return this.src.match(/.*\.svg$/);
+	}).each(function(){
+		var $img = bootstrapJQuery(this);
+		var imgID = $img.attr('id');
+		var imgURL = $img.attr('src');
+		var imgAlt = $img.attr('alt');
+		var imgClass = $img.attr('class');
+		var imgStyle = $img.attr('style');
+
+		var ajax = new XMLHttpRequest();
+		ajax.open("GET", imgURL, true);
+		ajax.onload = function(e) {
+			var svg = ajax.responseXML.getElementsByTagName('svg')[0];
+			if(imgID) svg.setAttribute('id', imgID);
+			if(imgAlt) svg.setAttribute('aria-label', imgAlt); else svg.setAttribute('aria-hidden', 'true');
+			svg.setAttribute('class', imgClass+' replaced-svg');
+			svg.classList.remove('svg-to-replace');
+			if(imgStyle) svg.setAttribute('style', imgStyle);
+			$img.replaceWith(svg);
+		};
+		ajax.send();
+	});
+});
+
+/************************************************************************
+ * Funkcja taguje klasą .wrap te elementy o klasie .wrap-auto, które
+ * wydają się przepełnione. Co robi klasa .wrap, to już zależy od styli
+ * konkretnego elementu.
+ */
+function doWrapAutoTag() {
+	bootstrapJQuery('.wrap-auto').each(function(){
+		var $elem = bootstrapJQuery(this);
+		$elem.removeClass('wrap');
+		if ($elem[0].offsetHeight < $elem[0].scrollHeight || $elem[0].offsetWidth < $elem[0].scrollWidth) {
+			$elem.addClass('wrap');
+		}
+	});
+}
+
+/************************************************************************
+ * Funkcje do responsywnego łamania górnej belki i głównych zakładek
+ * portletu. Może po doszlifowaniu przydadzą się bardziej ogólnie.
+ */
+function doHeaderAutoCenter() {
+	bootstrapJQuery('.justify-content-wrap-center').each(function(){
+		var $elem = bootstrapJQuery(this);
+		var pos0;
+		var center = false;
+
+		$elem.children().not('.sr-only').each(function(){
+			var pos = bootstrapJQuery(this).offset().top;
+			if (pos0) {
+				center = center || (pos0 !== pos);
+			} else {
+				pos0 = pos;
+			}
+		});
+
+		if (center) {
+			$elem.removeClass('justify-content-between');
+			$elem.addClass('justify-content-center');
+		} else {
+			$elem.addClass('justify-content-between');
+			$elem.removeClass('justify-content-center');
+		}
+	});
+}
+
+function doSessionCounterMove() {
+	var $cnt = bootstrapJQuery('.controls-right');
+
+	if ($cnt[0]) {
+		var $div = $cnt.find('.refresh:first');
+		var $slot = bootstrapJQuery('.pg_cui_session_counter_slot');
+
+		if ($slot[0].children.length === 0) {
+			var $but = $div.find('a:first');
+
+			if ($but.length > 0) {
+				$but = $but.clone().removeAttr('id').addClass('nav-link');
+				$cnt = $cnt.find('.timeout_time:first').clone();
+				$cnt.prependTo($but);
+				if ($slot[0].children.length === 0) $but.prependTo($slot);
+			}
+		}
+	}
+}
+
+function doMenuTabsToggle() {
+	var $tabs = bootstrapJQuery('#menu-tabs');
+	var $subTabs = bootstrapJQuery('.menu-items');
+	var $activeTab = $tabs.find('.active');
+
+	if ($subTabs.length !== 0) {
+		var $activeSubTab = bootstrapJQuery('.menu-items a.active');
+		if ($activeSubTab.length > 0) {
+			$activeTab = $tabs.find('> [rel="' + bootstrapJQuery('.menu-items > .active').attr('class').split(/\s+/)[0] + '"]');
+		}
+	}
+
+	var $toggle = bootstrapJQuery('#menu-tabs-toggle');
+	if ($toggle.length === 0) {
+		$toggle = $tabs.before('<a id="menu-tabs-toggle" data-toggle="collapse" href="#menu-tabs" aria-controls="#menu-tabs" aria-expanded="false"></a>').prev();
+	}
+
+	$toggle.empty();
+	$toggle.append($activeTab.find('.icon').clone());
+	$toggle.append($activeTab.contents().clone().filter(function(){return this.nodeType === Node.TEXT_NODE;}));
+
+	if (typeof $activeSubTab !== 'undefined' && $activeSubTab.length > 0) {
+		$toggle.append('<span class="pi pi-chevron-right"/>');
+		$toggle.append('<span class="light">' + $activeSubTab.text() + '</span>');
+	}
+}
+
+function onMenuTabsCollapse() {
+	bootstrapJQuery('.menu-tabs .mobile-dd').removeAttr('style');
+	bootstrapJQuery('.menu-tabs > a').removeClass('open');
+}
+
+function doMenuTabsScrollArrows() {
+	bootstrapJQuery('#menu-tabs').each(function(){
+		var $tabs = bootstrapJQuery(this);
+		$tabs.siblings('.scroll-arrow').remove();
+
+		if (this.offsetWidth < this.scrollWidth) {
+			var arrow_left = '<a class="scroll-arrow pi pi-chevron-left" onclick="doMenuTabsScroll(-1);"></a>';
+			var arrow_right = '<a class="scroll-arrow pi pi-chevron-right" onclick="doMenuTabsScroll(1);"></a>';
+
+			if (this.scrollLeft > 0) $tabs.before(arrow_left);
+			if ((this.scrollLeft + this.clientWidth) < this.scrollWidth) $tabs.after(arrow_right);
+		}
+	});
+}
+
+function doMenuTabsRebuild() {
+	var $tabs = bootstrapJQuery('#menu-tabs');
+	var $subtabs = bootstrapJQuery('#form_menu .menu-items');
+	// Jeśli jest tylko jedna główna zakładka z najwyżej jedną podzakładką - schować toto całkiem.
+	if ($tabs.length === 1 && $tabs.children().length === 1) {
+		var tab = $tabs.children()[0];
+		if (!tab.hasAttribute('rel') || $subtabs.find('.' + tab.getAttribute('rel')).children().length <= 1) {
+			if ($tabs.css('flex-direction') === 'column') $tabs.hide();
+			else $tabs.show();
+			return;
+		}
+	}
+	// Jeśli nie można schować, to trzeba przebudować.
+	if ($tabs.length === 1) {
+		doMenuTabsToggle();
+		$tabs.on('hidden.bs.collapse', onMenuTabsCollapse);
+
+		if ($tabs.css('flex-direction') === 'column') {
+			$tabs.siblings('.scroll-arrow').remove();
+			$tabs.find('> a').each(function(idx, tab){
+				var $tab = bootstrapJQuery(tab);
+				var $next = $tab.next();
+				if (tab.hasAttribute('rel') && !$next.hasClass('mobile-dd')) {
+					var $subtab = bootstrapJQuery('<div class="mobile-dd ' + tab.getAttribute('rel') + '"></div>');
+					$subtab.append($subtabs.find('.' + tab.getAttribute('rel') + ' a').clone());
+					$tab.after($subtab);
+				}
+			});
+		} else {
+			$tabs.find('a').blur();
+			$tabs.find('a.open').removeClass('open');
+			$tabs.find('.mobile-dd').remove();
+			$tabs.removeClass('collapsing');
+			$tabs.removeClass('collapsed');
+			$tabs.removeClass('show');
+
+			doMenuTabsScrollArrows();
+
+			$tabs.each(function(){
+				const $this = bootstrapJQuery(this);
+				if (this.offsetWidth < this.scrollWidth) {
+					const $active = $this.find('a.active');
+					var deltaL = $active.offset().left - $this.offset().left;
+					var arrowWidth = 2 * parseFloat(window.getComputedStyle(document.getElementsByTagName('html')[0])['fontSize']);
+					if (deltaL < 0) {
+						this.scrollLeft += deltaL;
+						if (!$active.is(':first-child')) {
+							this.scrollLeft -= arrowWidth;
+						}
+					}
+					var deltaR = deltaL + $active[0].offsetWidth - this.offsetWidth;
+					if (deltaR > 0) {
+						this.scrollLeft += deltaR;
+						if (!$active.is(':last-child')) {
+							this.scrollLeft += arrowWidth;
+						}
+					}
+				}
+			});
+		}
+	}
+}
+
+function doMenuTabsScroll(dir) {
+	var tabs = bootstrapJQuery('#menu-tabs')[0];
+	tabs.scrollLeft += dir*tabs.offsetWidth/10;
+}
+
+bootstrapJQuery(function(){
+
+	function onHeaderAndMenuResize() {
+		doWrapAutoTag();
+		doHeaderAutoCenter();
+		doSessionCounterMove();
+		doMenuTabsRebuild();
+	}
+
+	function onMenuMouseEnter() {
+		bootstrapJQuery('#form_menu').addClass('hover');
+	}
+
+	function onMenuMouseLeave() {
+		bootstrapJQuery('#form_menu').removeClass('hover');
+	}
+
+	function onTabsMouseEnter() {
+		if (bootstrapJQuery('#menu-tabs').css('flex-direction') === 'row' && bootstrapJQuery('#menu-tabs .pinned').length === 0) {
+			if (this.hasAttribute('rel')) {
+				openMenuTab(this, false);
+			} else {
+				bootstrapJQuery('.menu-items > div:not(.active)').css('display', 'none');
+				bootstrapJQuery('#menu-tabs > a').removeClass('active open');
+				bootstrapJQuery(this).addClass('active');
+			}
+		}
+	}
+
+	function onTabsClickOutside() {
+		if (! bootstrapJQuery('#form_menu').hasClass('hover') && bootstrapJQuery('#menu-tabs').css('flex-direction') === 'row') {
+			const $initial = bootstrapJQuery('#menu-tabs > a.initial');
+
+			if ($initial.length === 1 && !$initial.hasClass('active')) {
+				bootstrapJQuery('#menu-tabs > a.pinned').removeClass('pinned');
+				bootstrapJQuery('.menu-items > div').css('display', 'none');
+
+				if ('openMenuTab(this)' === $initial.attr('onclick')) {
+					openMenuTab($initial[0], false);
+				} else {
+					bootstrapJQuery('#menu-tabs > a').removeClass('active open');
+					$initial.addClass('active');
+				}
+			}
+		}
+	}
+
+	function doTabsSetup() {
+		bootstrapJQuery('#form_menu').mouseenter(onMenuMouseEnter).mouseleave(onMenuMouseLeave);
+		bootstrapJQuery('#menu-tabs > a.active').addClass('initial');
+		bootstrapJQuery('#menu-tabs').scroll(doMenuTabsScrollArrows);
+		bootstrapJQuery('#menu-tabs > a').mouseenter(onTabsMouseEnter);
+		bootstrapJQuery('body').mousedown(onTabsClickOutside);
+	}
+
+	onHeaderAndMenuResize();
+	bootstrapJQuery(window).resize(onHeaderAndMenuResize);
+
+	var portlet = document.getElementById('statusLoadingPageIndex');
+
+	if (portlet) {
+		new MutationObserver(function (mutations, observer) {
+			onHeaderAndMenuResize();
+			doTabsSetup();
+			observer.disconnect();
+			bootstrapJQuery(document).arrive('#menu-tabs', function(){
+				doTabsSetup();
+				doMenuTabsRebuild();
+			});
+		}).observe(portlet, {childList: true});
+	}
+});
+
+/************************************************************************
+ * Nawigacja klawiaturowa  w zwiniętych na mobilki głównych zakładkach.
+ * Wyglądają wtedy jak dropdown, więc emuluje działanie dropdowna.
+ * Współdziała z Bootstrapowym kodem do skolapsowanego navbara.
+ * Po co?
+ * Na telefony z fizyczną klawiaturą, albo podpiętą zewnętrzną.
+ * Na stare netbooki i pagery. Może kiedyś na zegarki i opaski.
+ */
+function menuTabsToggleNavigationHandler(e) {
+	var $toggle = bootstrapJQuery('#menu-tabs-toggle');
+	var $tabs = bootstrapJQuery('#menu-tabs');
+
+	if ($toggle.is(":visible")) {
+		if ($tabs.hasClass('show')) {
+			if (e.keyCode === 27 || (e.keyCode === 9 && e.shiftKey)) {
+				$tabs.collapse('hide');
+			} else if (e.keyCode === 38 || e.keyCode === 40) {
+				$tabs.find('a:first').focus();
+				e.preventDefault();
+			}
+		} else {
+			if (e.keyCode === 38 || e.keyCode === 40) {
+				$tabs.collapse('show');
+				e.preventDefault();
+			}
+		}
+	}
+}
+
+function menuTabsNavigationHandler(e) {
+	var $toggle = bootstrapJQuery('#menu-tabs-toggle');
+	var $tabs = bootstrapJQuery('#menu-tabs');
+
+	function prevLink($item) {
+		var $prev = $item.prev();
+		if ($prev.length === 0 && $item.parent().hasClass('mobile-dd')) {
+			$prev = $item.parent().prev();
+		} else if ($prev.hasClass('mobile-dd')) {
+			if ($prev.is(':visible')) {
+				$prev = $prev.find('a:last');
+			} else {
+				$prev = $prev.prev();
+			}
+		}
+		return $prev;
+	}
+
+	function nextLink($item) {
+		var $next = $item.next();
+		if ($next.length === 0 && $item.parent().hasClass('mobile-dd')) {
+			$next = $item.parent().next();
+		} else if ($next.hasClass('mobile-dd')) {
+			if ($next.is(':visible')) {
+				$next = $next.find('a:first');
+			} else {
+				$next = $next.next();
+			}
+		}
+		return $next;
+	}
+
+	if ($tabs.css('flex-direction') === 'column') {
+		var $item = bootstrapJQuery(e.target);
+
+		if (e.keyCode === 27) {
+			$tabs.collapse('hide');
+			$toggle.focus();
+		} else if (e.keyCode === 38) {
+			prevLink($item).focus();
+			e.preventDefault();
+		} else if (e.keyCode === 40) {
+			nextLink($item).focus();
+			e.preventDefault();
+		}
+		else if (e.keyCode === 9 && !e.shiftKey) {
+			if (nextLink($item).length === 0) {
+				$tabs.collapse('hide');
+			}
+		}
+	}
+}
+
+bootstrapJQuery(document).ready(function () {
+	bootstrapJQuery(document).arrive('#menu-tabs-toggle', function () {
+		var toggle = bootstrapJQuery('#menu-tabs-toggle').get(0);
+		toggle.addEventListener('keydown', menuTabsToggleNavigationHandler, true);
+	});
+	bootstrapJQuery(document).arrive('#menu-tabs', function () {
+		var tabs = bootstrapJQuery('#menu-tabs').get(0);
+		tabs.addEventListener('keydown', menuTabsNavigationHandler, true);
+	});
+});
+
+/************************************************************************
+ * Funkcje dla responsywności tabel
+ */
+bootstrapJQuery(document).arrive('.rich-datascr-button', function(){
+	var $button = bootstrapJQuery(this);
+	var text = $button.text();
+
+	if ("««" === text) $button.text('\ue92d');
+	else if ("«" === text) $button.text('\ue931');
+	else if ("»" === text) $button.text('\ue932');
+	else if ("»»" === text) $button.text('\ue92e');
+});
+
+bootstrapJQuery(document).arrive('.ui-datatable-tablewrapper', function(){
+	var $this = bootstrapJQuery(this);
+	var $table = $this.find('table.pgExtDataTable');
+
+	if ($table === null) {
+		return;
+	}
+
+	$this.addClass('table-responsive-wrapper');
+
+	if ($table.hasClass('wrap-auto')) {
+		$table.removeClass('wrap-auto');
+		$this.addClass('wrap-auto');
+	}
+
+	var $children = $this.children();
+	var $div = bootstrapJQuery('<div class="table-responsive"></div>');
+	$this.append($div);
+	$div.append($children);
+});
+
+function doResponsiveTableScroll() {
+	bootstrapJQuery('.table-responsive').each(function(){
+		var $div = bootstrapJQuery(this);
+		var $tab = $div.find('table');
+		var divWidth = $div.width();
+		var tabWidth = $tab.width();
+		var shadow_left = '<div class="scroll-shadow shadow-left"></div>';
+		var shadow_right = '<div class="scroll-shadow shadow-right"></div>';
+
+		if (divWidth < tabWidth) {
+			if (this.scrollLeft > 0) {
+				if ($div.siblings('.shadow-left').length === 0) $div.before(shadow_left);
+			} else {
+				$div.siblings('.shadow-left').remove();
+			}
+
+			if ((this.scrollLeft + this.clientWidth) < this.scrollWidth) {
+				if ($div.siblings('.shadow-right').length === 0) $div.after(shadow_right);
+			} else {
+				$div.siblings('.shadow-right').remove();
+			}
+		} else {
+			$div.siblings('.scroll-shadow').remove();
+		}
+	});
+}
+
+bootstrapJQuery(window).resize(doResponsiveTableScroll);
+bootstrapJQuery(document).arrive('.table-responsive', function(){
+	doResponsiveTableScroll();
+	bootstrapJQuery(this).scroll(doResponsiveTableScroll);
+});
+
+/* Opisywanie tabelek przed ich responsywnym łamaniem. */
+if (document.querySelector('meta[name="viewport"]')) {
+	bootstrapJQuery(document).arrive('table.rich-table,table.pgExtDataTable', function(){
+		var $table = bootstrapJQuery(this);
+		$table.attr('aria-role', 'table');
+
+		var $headRow = $table.find('thead:first tr:last');
+		var $headCells = $headRow.find('th');
+
+		var $tbody = $table.find('tbody:first');
+		$tbody.attr('aria-role', 'rowgroup');
+
+		$tbody.find('tr').each(function(){
+			var $row = bootstrapJQuery(this);
+			$row.attr('aria-role', 'row');
+
+			var $cells = $row.find('td');
+			if ($cells.length === $headCells.length) {
+				for(var i=0; i<$cells.length; i++) {
+					var $cell = bootstrapJQuery($cells[i]);
+					$cell.attr('aria-role', 'cell');
+					$cell.attr('data-table-col-label', $headCells[i].textContent);
+				}
+			}
+		});
+	});
+}
+
+/************************************************************************
+ * Funkcje dla starych multiselectów
+ */
+bootstrapJQuery(function () {
+
+	function closeAllMultiSelects(idToOmit) {
+		bootstrapJQuery('.rich-stglpanel-body.multiSelectBody:visible').each(function () {
+			if (this.parentElement.id !== idToOmit) {
+				bootstrapJQuery(this).siblings('.rich-stglpanel-header.multiSelectHeader').click();
+			}
+		});
+	}
+
+	bootstrapJQuery(document).click(function (e) {
+		closeAllMultiSelects(null);
+	});
+
+	bootstrapJQuery(document).arrive('.rich-stglpanel-body.multiSelectBody,.rich-stglpanel-header.multiSelectHeader', function () {
+		bootstrapJQuery(this).click(function (e) {
+			e.stopPropagation();
+			closeAllMultiSelects(this.parentElement.id);
+		});
+	});
+});
+
+/************************************************************************
+ * Funkcje dla komunikatów na stronie głównej
+ */
+function isAllNewsVisible() {
+	return bootstrapJQuery('#newsWrap #pnlNews > div').length === bootstrapJQuery('#newsWrap #pnlNews > div:visible').length;
+}
+
+function checkFirstLastNewsActive() {
+	var $newsWrap = bootstrapJQuery('#newsWrap');
+	$newsWrap.removeClass('firstActive lastActive');
+	if (bootstrapJQuery('#newsWrap #pnlNews > div:first').hasClass('active')) {
+		$newsWrap.addClass('firstActive');
+	}
+	if (bootstrapJQuery('#newsWrap #pnlNews > div:last').hasClass('active')) {
+		$newsWrap.addClass('lastActive');
+	}
+}
+
+function onNewsPanelResize() {
+	checkFirstLastNewsActive();
+	bootstrapJQuery('#pnlNews [data-parent="#pnlNews"]:not(.show)').each(function(){
+		const $item = bootstrapJQuery(this);
+		$item.addClass('collapse');
+
+		if (this.scrollHeight <= this.clientHeight) {
+			$item.removeClass('collapse');
+		}
+	});
+}
+
+function newsClickHandler(e, next) {
+	if (!isAllNewsVisible()) {
+		if (!bootstrapJQuery('#newsWrap #pnlNews > ' + (next ? 'div:last' : 'div:first')).hasClass('active')) {
+			const currentActiveElement = bootstrapJQuery('#newsWrap #pnlNews > div.active').removeClass('active');
+			const newActiveElement = next ? currentActiveElement.next() : currentActiveElement.prev();
+			newActiveElement.addClass('active');
+			onNewsPanelResize();
+			return;
+		}
+	}
+	const et = e.target.hasAttribute('data-onclick') ? e.target : e.target.parentElement;
+	return Function(et.getAttribute('data-onclick'))();
+}
+
+function prevNewsClickHandler(e) {
+	return newsClickHandler(e, false);
+}
+
+function nextNewsClickHandler(e) {
+	return newsClickHandler(e, true);
+}
+
+function prevNewsLoaded(e) {
+	if (! isAllNewsVisible()) {
+		bootstrapJQuery('#newsWrap #pnlNews > div:first').removeClass('active');
+		bootstrapJQuery('#newsWrap #pnlNews > div:last').addClass('active');
+	}
+	checkFirstLastNewsActive();
+}
+
+function nextNewsLoaded() {
+	checkFirstLastNewsActive();
+}
+
+bootstrapJQuery(window).resize(onNewsPanelResize);
+bootstrapJQuery(document).arrive('#pnlNews > div', onNewsPanelResize);
+bootstrapJQuery(document).ready(function(){
+	bootstrapJQuery(document).arrive('#newsWrap', function() {
+		const $poprzednie = bootstrapJQuery('#newsWrap a.poprzednie');
+		$poprzednie.attr({'data-onclick': $poprzednie.attr('onclick')}).removeAttr('onclick').click(prevNewsClickHandler);
+		const $nastepne = bootstrapJQuery('#newsWrap a.nastepne');
+		$nastepne.attr({'data-onclick': $nastepne.attr('onclick')}).removeAttr('onclick').click(nextNewsClickHandler);
+	});
+
+	pg.cui.js.checkMultiTab();
+});

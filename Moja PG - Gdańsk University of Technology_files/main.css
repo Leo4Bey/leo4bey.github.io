@@ -1,0 +1,881 @@
+.labelsColumnNormal {
+	width: 150px;
+	font-weight: bold;
+	padding: 2px 0;
+}
+
+.valuesColumnNormal {
+	min-width: 400px;
+	padding: 2px 0;
+}
+
+.labelsColumnShort {
+	width: 100px;
+	font-weight: bold;
+	padding: 2px 0;
+}
+
+.labelsColumnLong {
+	width: 200px;
+	font-weight: bold;
+	padding: 2px 0;
+}
+
+.labelsColumn300 {
+	width: 300px;
+	padding: 2px 0;
+	font-weight: bold;
+}
+.valuesColumn600 {
+	width: 600px;
+	padding: 2px 0;
+}
+
+.borderedTable td {
+	border-bottom: 1px dotted gray;
+}
+
+.borderedTable .labelsColumnLong {
+	border: none;
+}
+
+/* Modal panels */
+img.closeModalButton {
+	margin-top: 2px;
+	cursor: pointer;
+}
+
+.selectOneMenu {
+	width: 280px;
+}
+
+.selectOneMenuWide {
+	width: 400px;
+}
+
+
+.smallComboBox {
+	width: 180px;
+}
+
+.smallButton {
+	border: 1px solid black;
+	cursor: pointer;
+	background-color: transparent;
+}
+
+.input {
+	width: 180px;
+}
+.longInput {
+	width: 300px;
+}
+.pic {
+	margin-bottom:-5px;
+	margin-right:5px;
+}
+
+.pre-wrap {
+	white-space: pre-wrap;
+}
+
+
+.backPanel {
+	float: right;
+	text-align: right;
+}
+
+a.selected {
+	font-weight: bold;
+	text-decoration: underline;
+}
+.studentInfo .multiCheckboxPanel input[type=checkbox] {
+	margin-right: 15px;
+}
+.studentInfo .topMenuContent {
+	border: 1px solid rgb(192, 192, 192);
+	padding: 10px;
+	clear: left;
+}
+
+.studentInfo .topMenu div {
+	float: left;
+	padding: 3px 10px;
+	border-left: 1px solid rgb(192, 192, 192);
+	border-top: 1px solid rgb(192, 192, 192);
+	background-color: rgb(229, 236, 249);
+	font-weight: bold;
+}
+
+.studentInfo .topMenu div.selected {
+	background-color: #ADDAFF;
+}
+
+.studentInfo .tree-course-selected {
+	background-color: #E3EAFA;
+	border: 0;
+	font-weight: bold;
+}
+
+.studentInfo div.last {
+	border-right: 1px solid rgb(192, 192, 192);
+}
+
+.studentInfo .fourColsTableLabels {
+	width: 15%;
+	font-weight: bold;
+}
+
+.studentInfo .fourColsTableData {
+	width: 35%;
+}
+
+/* Richfaces - koniec */
+.studentInfo {
+	font: 12px/16px Arial,Helvetica,sans-serif;
+}
+
+.studentInfo .nobold {
+	font-weight: normal;
+}
+
+.leftMenu {
+	vertical-align: top;
+	width: 175px;
+	min-width: 175px;
+}
+
+.selectedTopTab {
+	background-color: #ADDAFF;
+}
+
+
+input.leftSpace, a.leftSpace {
+	margin-left: 30px;
+}
+
+div.buttonsPanel {
+	text-align: center;
+	margin-top: 15px;
+	margin-bottom: 15px;
+}
+
+div.buttonsPanelSmall {
+	text-align: center;
+	margin-top: 15px;
+	margin-bottom: 5px;
+}
+
+.col15 {
+	font-weight: bold;
+	vertical-align: top;
+}
+.pnlCenterBlock {
+	display: block;
+	text-align: center;
+	margin: 30px auto;
+	width: 600px;
+}
+input.leftSpace, a.leftSpace, select.leftSpace {
+	margin-left: 26px;
+}
+
+/* Organizer */
+
+.organizerBlock > * {
+	display: inline-block;
+	overflow: auto;
+	width: 100%;
+	text-align: center;
+}
+
+.organizerBLock > .description {
+	font-size: 10px;
+}
+
+.organizerBlock > .hourMarker {
+	font-size: 9px;
+	font-weight: bold;
+}
+
+.organizerHeaderTr th, .organizerHoursBlock {
+	background-color: #e3e9f0;
+	text-align: center;
+	font-weight: bold;
+	vertical-align: middle;
+}
+
+.organizerHoursBlock {
+	border-bottom: 1px solid #fff;
+}
+
+.organizerDayTable, .organizerDayTable tr, .organizerDayTable th, .organizerDayTable td {
+	border: 6px solid white;
+	border-collapse: collapse;
+	padding-left: 0;
+	padding-right: 0;
+}
+
+.organizerDayTable td {
+	border-right-color: rgba(0,0,0,0);
+}
+
+.organizerDayTable tbody {
+	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAABgAQMAAAAEr5FMAAAABlBMVEXo7PH///+MMF0uAAAAFElEQVQIW2OUYZRh/IMEUXmDng8AuAJTgXGpy7EAAAAASUVORK5CYII=);
+	background-repeat: repeat;
+	background-position-y: 8px;
+}
+
+.organizerBlockColumnHolder {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: row;
+}
+
+.organizerBlockColumn {
+	display: flex;
+	flex-direction: column;
+}
+
+.organizerBlockColumnDark {
+	background-color: rgba(200, 210, 225, 0.25);
+}
+
+.organizerBlockContainer {
+	width: 156px;
+	display: flex;
+}
+
+.organizerBlockSideContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	padding: 0 4px;
+}
+
+.organizerBlock, .organizerHoursBlock, .organizerPaddingBlock {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	font: 10px tahoma,verdana,sans-serif;
+	width: 156px;
+}
+
+.organizerBlock {
+	overflow: auto;
+	width: 146px;
+	margin: 0;
+	padding: 1px 1px 1px 3px;
+	border-top: 2px solid #e5eaf1;
+	border-right: 2px solid #e5eaf1;
+	border-bottom: 2px solid #e5eaf1;
+	background-color: rgba(244, 247, 250, 0.775);
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.organizerBlockBorder {
+	display: inline-block;
+	width: 10px;
+}
+
+.organizerBlockIcon {
+	display: inline-block;
+	width: 15px;
+	height: 18px;
+	line-height: 90% !important;
+	text-align: center;
+	font-size: 18px;
+	font-weight: bold;
+	color: white;
+	position: relative;
+	z-index: 9;
+	cursor: default;
+}
+
+.organizerBlockTypeUnknown {
+	background-color: #ff0000;
+}
+
+.organizerBlockClassTypeW {
+	background-color: #55a2eb;
+}
+.organizerBlockRegistrationHighlighted > .organizerBlockContainer > .organizerBlockClassTypeW + .organizerBlock {
+	border-color: #55a2eb;
+}
+
+.organizerBlockClassTypeC {
+	background-color: #ef569d;
+}
+.organizerBlockRegistrationHighlighted > .organizerBlockContainer > .organizerBlockClassTypeC + .organizerBlock {
+	border-color: #ef569d;
+}
+
+.organizerBlockClassTypeL {
+	background-color: #9f7edb;
+}
+.organizerBlockRegistrationHighlighted > .organizerBlockContainer > .organizerBlockClassTypeL + .organizerBlock {
+	border-color: #9f7edb;
+}
+
+.organizerBlockClassTypeP {
+	background-color: #ef9e58;
+}
+.organizerBlockRegistrationHighlighted > .organizerBlockContainer > .organizerBlockClassTypeP + .organizerBlock {
+	border-color: #ef9e58;
+}
+
+.organizerBlockClassTypeS {
+	background-color: #f5ef36;
+}
+.organizerBlockRegistrationHighlighted > .organizerBlockContainer > .organizerBlockClassTypeS + .organizerBlock {
+	border-color: #f5ef36;
+}
+
+.organizerBlockReservationTypeInternal {
+	background-color: #bdedff;
+}
+
+.organizerBlockReservationTypeExternal {
+	background-color: #659ec7;
+}
+
+.organizerBlockReservationTypeNone {
+
+}
+
+.organizerBlockReservationTypeLock {
+	background-color: #e0e0e0;
+}
+
+.organizerBlockReservationTypeTeacherConsulation {
+	background-color: #ffcc66;
+}
+
+.organizerBlockReservationTypeTeacherOther {
+	background-color: #7093db;
+}
+
+.organizerBlockTextHeader, .organizerBlockTextHeader:hover {
+	color: black;
+	text-decoration: underline;
+	font-weight: bold;
+}
+
+/* Organizer - rejestracje */
+
+.organizerRegistrationLegendBlock {
+	display: inline-block;
+	margin-left: 1.5ex;
+	margin-right: 0.5ex;
+	width: 10px;
+	height: 18px;
+}
+
+.showSignedUp div:not(.organizerBlockRegistrationSignedUp) > .organizerBlockBorder {
+	background-color: #E5E4E2;
+}
+
+.showSignedUp div:not(.organizerBlockRegistrationSignedUp) > .organizerBlock {
+	color: #E5E4E2;
+}
+
+.showSignedUp div:not(.organizerBlockRegistrationSignedUp) > .organizerBlock > .description > span > span > .organizerBlockTextHeader {
+	color: #E5E4E2;
+}
+
+.showSignedUp div:not(.organizerBlockRegistrationSignedUp) > .organizerBlockBorder > .organizerBlockIcon {
+	background-color: #E5E4E2;
+}
+
+.showUnavailable div:not(.organizerBlockRegistrationUnavailable) > .organizerBlockBorder {
+	background-color: #E5E4E2;
+}
+
+.showUnavailable div:not(.organizerBlockRegistrationUnavailable) > .organizerBlock {
+	color: #E5E4E2;
+}
+
+.showUnavailable div:not(.organizerBlockRegistrationUnavailable) > .organizerBlock > .description > span > span > .organizerBlockTextHeader {
+	color: #E5E4E2;
+}
+
+.showUnavailable div:not(.organizerBlockRegistrationUnavailable) > .organizerBlockBorder > .organizerBlockIcon {
+	background-color: #E5E4E2;
+}
+
+/*showUnavailableChangePossible*/
+.showUnavailableChangePossible div:not(.organizerBlockRegistrationUnavailableChangePossible) > .organizerBlockBorder {
+	background-color: #E5E4E2;
+}
+
+.showUnavailableChangePossible div:not(.organizerBlockRegistrationUnavailableChangePossible) > .organizerBlock {
+	color: #E5E4E2;
+}
+
+.showUnavailableChangePossible div:not(.organizerBlockRegistrationUnavailableChangePossible) > .organizerBlock > .description > span > span > .organizerBlockTextHeader {
+	color: #E5E4E2;
+}
+
+.showUnavailableChangePossible div:not(.organizerBlockRegistrationUnavailableChangePossible) > .organizerBlockBorder > .organizerBlockIcon {
+	background-color: #E5E4E2;
+}
+
+/*showSignedOnOtherClassType*/
+.showSignedOnOtherClassType div:not(.organizerBlockRegistrationSignedOnOtherClassType) > .organizerBlockBorder {
+	background-color: #E5E4E2;
+}
+
+.showSignedOnOtherClassType div:not(.organizerBlockRegistrationSignedOnOtherClassType) > .organizerBlock {
+	color: #E5E4E2;
+}
+
+.showSignedOnOtherClassType div:not(.organizerBlockRegistrationSignedOnOtherClassType) > .organizerBlock > .description > span > span > .organizerBlockTextHeader {
+	color: #E5E4E2;
+}
+
+.showSignedOnOtherClassType div:not(.organizerBlockRegistrationSignedOnOtherClassType) > .organizerBlockBorder > .organizerBlockIcon {
+	background-color: #E5E4E2;
+}
+
+/*showObligatoryClassType*/
+.showObligatoryClassType div:not(.organizerBlockRegistrationObligatoryClassType) > .organizerBlockBorder {
+	background-color: #E5E4E2;
+}
+
+.showObligatoryClassType div:not(.organizerBlockRegistrationObligatoryClassType) > .organizerBlock {
+	color: #E5E4E2;
+}
+
+.showObligatoryClassType div:not(.organizerBlockRegistrationObligatoryClassType) > .organizerBlock > .description > span > span > .organizerBlockTextHeader {
+	color: #E5E4E2;
+}
+
+.showObligatoryClassType div:not(.organizerBlockRegistrationObligatoryClassType) > .organizerBlockBorder > .organizerBlockIcon {
+	background-color: #E5E4E2;
+}
+
+.showTypeUnavailable div:not(.organizerBlockRegistrationObligatoryClassType) > .organizerBlockBorder {
+	background-color: #E5E4E2;
+}
+
+.showTypeUnavailable div:not(.organizerBlockRegistrationObligatoryClassType) > .organizerBlock {
+	color: #E5E4E2;
+}
+
+.showTypeUnavailable div:not(.organizerBlockRegistrationObligatoryClassType) > .organizerBlock > .description > span > span > .organizerBlockTextHeader {
+	color: #E5E4E2;
+}
+
+.showTypeUnavailable div:not(.organizerBlockRegistrationObligatoryClassType) > .organizerBlockBorder > .organizerBlockIcon {
+	background-color: #E5E4E2;
+}
+
+.organizerBorderBlockRegistrationTypeUnavailable {
+	background-color: #b4b4b4;
+}
+
+.organizerBlockRegistrationSignedUp .organizerBlockIcon {
+	background-color: #39b116;
+}
+
+.organizerBlockRegistrationUnavailable .organizerBlockIcon {
+	background-color: #b4b4b4;
+}
+
+.organizerBlockRegistrationUnavailableChangePossible .organizerBlockIcon {
+	background-color: #b4b4b4;
+}
+
+.organizerBlockRegistrationSignedOnOtherClassType .organizerBlockIcon {
+	background-color: #dbdb00;
+	color: black;
+}
+
+.organizerBlockRegistrationObligatoryClassType .organizerBlockIcon {
+	background-color: #db0000;
+}
+
+.organizerBlockRegistrationTypeUnavailable .organizerBlockIcon {
+	background-color: #b4b4b4;
+}
+
+.organizerDayLight.registration-block.organizerBlockRegistrationUnavailable {
+	background-color: #e3eaf2;
+}
+.organizerDayDark.registration-block.organizerBlockRegistrationUnavailable {
+	background-color: #d6dfe9;
+}
+.organizerDayLight.registration-block.organizerBlockRegistrationSignedUp {
+	background-color: #f6f8fb;
+}
+.organizerDayDark.registration-block.organizerBlockRegistrationSignedUp {
+	background-color: #edf1f5;
+}
+.organizerDayLight.registration-block.organizerBlockRegistrationAvailable {
+	background-color: #f6f8fb;
+}
+.organizerDayDark.registration-block.organizerBlockRegistrationAvailable {
+	background-color: #edf1f5;
+}
+
+.organizerRegistrationLegendObligatory,
+.organizerBlockRegistrationObligatory .organizerBlockTextHeader,
+.organizerBlockRegistrationObligatory .organizerBlockTextHeader:hover {
+	color: #e31515 !important;
+}
+
+.organizerDayLight.organizerBlockRegistrationHighlighted {
+	opacity: 0.65 !important;
+	background-color: #fcfcfd !important;
+}
+.organizerDayDark.organizerBlockRegistrationHighlighted {
+	opacity: 0.85 !important;
+	background-color: #f7f9fb !important;
+}
+
+/* Obszar dla kontrolek typu input oraz select */
+.adjustInputControls select,.adjustInputControls input[type=text] {
+	width: 300px;
+}
+
+.adjustInputControls textarea {
+	width: 300px;
+	height: 100px;
+}
+
+.adjustedModal .rich-mpnl-header {
+	padding: 12px 12px 0;
+	background: none;
+	border: none;
+}
+
+.adjustedModal .rich-mpnl-text {
+	color: inherit;
+	font-weight: inherit
+}
+
+.adjustedModal .rich-mpnl-body {
+    padding: 0 10px 10px;
+}
+
+.selectedTopTab {
+	background-color: #C8CFD0;
+}
+
+.rich-toolbar-item {
+	color:#000000;
+	padding: 0px;
+}
+
+.rich-ddmenu-label, .rich-ddmenu-label-disabled {
+	padding: 4px 16px;
+}
+
+.rich-ddmenu-label-unselect {
+	padding: 5px 17px;
+}
+
+.rich-table-subheader input[type=text] {
+	width: 95%;
+	max-width: 430px;
+}
+
+.rich-tree-node-text {
+	white-space: normal;
+}
+
+.rich-table-subheadercell {
+	padding: 0px;
+}
+
+.rich-pmenu-top-group {
+	height: auto;
+}
+
+.dateWithoutDays tr[id]{
+		display:none;
+	}
+
+.thinColumn{
+	max-width: 150px;
+}
+
+.scrollPanel {
+   height: 120px;
+   overflow: auto;
+   margin-left:-7px;
+}
+
+/*             styles for the star rater                */
+
+.rating {
+    float:left;
+}
+
+/* :not(:checked) is a filter, so that browsers that don’t support :checked don’t
+   follow these rules. Every browser that supports :checked also supports :not(), so
+   it doesn’t make the test unnecessarily selective */
+.rating:not(:checked) > input {
+    display:none;
+    clip:rect(0,0,0,0);
+}
+
+.rating:not(:checked) > label {
+    float:right;
+    width:1em;
+    padding:0 .1em;
+    overflow:hidden;
+    white-space:nowrap;
+    cursor:pointer;
+    font-size:140%;
+    line-height:1.2;
+    color:#ddd;
+    text-shadow:0.8px 0.8px #bbb, 1.6px 1.6px #666, .0.8em .0.8em .1.6em rgba(0,0,0,.5);
+}
+
+.rating:not(:checked) > label:before {
+    content: '★ ';
+}
+
+.rating > input:checked ~ label {
+    color: #f70;
+    text-shadow:0.8px 0.8px #c60, 1.6px 1.6px #940, .0.8em .0.8em .1.6em rgba(0,0,0,.5);
+}
+
+.rating:not(:checked) > label:hover,
+.rating:not(:checked) > label:hover ~ label {
+    color: gold;
+    text-shadow:0.8px 0.8px goldenrod, 1.6px 1.6px #B57340, .0.8em .0.8em .1.6em rgba(0,0,0,.5);
+}
+
+.rating > input:checked + label:hover,
+.rating > input:checked + label:hover ~ label,
+.rating > input:checked ~ label:hover,
+.rating > input:checked ~ label:hover ~ label,
+.rating > label:hover ~ input:checked ~ label {
+    color: #ea0;
+    text-shadow:0.8px 0.8px goldenrod, 1.6px 1.6px #B57340, .0.8em .0.8em .1.6em rgba(0,0,0,.5);
+}
+
+.rating > label:active {
+    position:relative;
+}
+
+.rating2 {
+    float:left;
+}
+
+/* :not(:checked) is a filter, so that browsers that don’t support :checked don’t
+   follow these rules. Every browser that supports :checked also supports :not(), so
+   it doesn’t make the test unnecessarily selective */
+.rating2:not(:checked) > input {
+    /*position:absolute;
+    top:-9999px;*/
+    display:none;
+    clip:rect(0,0,0,0);
+}
+
+.rating2:not(:checked) > label {
+    float:right;
+    width:1em;
+    padding:0 .1em;
+    overflow:hidden;
+    white-space:nowrap;
+    cursor:pointer;
+    font-size:140%;
+    line-height:1.2;
+    color:#ddd;
+    text-shadow:0.8px 0.8px #bbb, 1.6px 1.6px #666, .0.8em .0.8em .1.6em rgba(0,0,0,.5);
+}
+
+.rating2:not(:checked) > label:before {
+    content: '★ ';
+}
+
+.rating2 > input:checked ~ label {
+    color: #f70;
+    text-shadow:0.8px 0.8px #c60, 1.6px 1.6px #940, .0.8em .0.8em .1.6em rgba(0,0,0,.5);
+}
+
+.rating2:not(:checked) > label:hover,
+.rating2:not(:checked) > label:hover ~ label {
+    color: gold;
+    text-shadow:0.8px 0.8px goldenrod, 1.6px 1.6px #B57340, .0.8em .0.8em .1.6em rgba(0,0,0,.5);
+}
+
+.rating2 > input:checked + label:hover,
+.rating2 > input:checked + label:hover ~ label,
+.rating2 > input:checked ~ label:hover,
+.rating2 > input:checked ~ label:hover ~ label,
+.rating2 > label:hover ~ input:checked ~ label {
+    color: #ea0;
+    text-shadow:0.8px 0.8px goldenrod, 1.6px 1.6px #B57340, .0.8em .0.8em .1.6em rgba(0,0,0,.5);
+}
+
+.rating2 > label:active {
+    position:relative;
+}
+
+.boldText {
+	font-weight: bold;
+}
+
+.warningText {
+	font-size: large;
+	font-weight: bold;
+	color: red;
+	text-align: center;
+}
+
+.warnMessageNoBorder {
+	padding: 6px;
+	color: #533802;
+	background-color: #FFFFE0;
+}
+
+.labelsColumnNormalScholarshipRequest {
+	width: 300px;
+	font-weight: bold;
+	padding: 2px 0;
+}
+
+.standardForm {
+	width: 100%;
+	border-spacing: 0;
+}
+
+.standardForm > tbody > tr > td:first-child {
+	width: 150px;
+	font-weight: bold;
+}
+
+.standardForm .col1 {
+	width: 150px;
+	font-weight: bold;
+}
+
+.standardForm .col2 {
+	width: 250px;
+}
+
+.standardForm > tbody > tr > td {
+	padding: 7px;
+}
+
+.standardForm input[type="text"], input[type="password"], textarea, select {
+	width: 95%;
+}
+
+.standardTable {
+	display: table;
+	text-align: center;
+}
+
+.standardTable > span {
+	display: table;
+	border-left: 1px solid #cecece;
+}
+
+.standardTable > span:first-child {
+	border-top: 1px solid #cecece;
+	font-weight: bold;
+	background-color: #fdf3e2;
+}
+
+.standardTable > span > span {
+	display: table-row;
+}
+
+.standardTable > span > span > span {
+	display: table-cell;
+	vertical-align: middle;
+	width: 150px;
+	padding: 5px;
+	border-right: 1px solid #cecece;
+	border-bottom: 1px solid #cecece;
+	box-sizing: border-box;
+}
+
+img.linkIcon {
+	margin-right: 3px;
+}
+
+span.linkLabel, div.linkLabel {
+	vertical-align: middle;
+}
+
+.underlinedRow > td {
+	border-bottom: 1px solid #dedede;
+}
+
+.underlineAllRows > tbody > tr > td {
+	border-bottom: 1px solid #dedede;
+}
+
+.lastRowNotUnderlined > tbody > tr:last-child > td {
+	border-bottom: 0 none !important;
+}
+
+.infoIcon {
+	vertical-align: middle;
+	margin-left: 5px;
+}
+
+.infoIconForCheckbox {
+	margin-left: 5px;
+}
+
+.radioNoMargin {
+	margin: 0;
+	vertical-align: middle;
+}
+.cardTblCollapsed hr {
+	width: 80%;
+	height: 1px;
+	background-color: #D8D8D8;
+	text-align: left;
+	margin-left: 0;
+	border: none;
+}
+.cardRowStyled {
+	border: 1px solid #D8D8D8;
+	padding: 6px
+}
+
+.cardRowStyledCtr {
+	border: 1px solid #D8D8D8;
+	padding: 6px 10px;
+	text-align: center
+}
+
+.cardTblCollapsed {
+	border-collapse: collapse;
+}
+
+.col450 {
+	width: 450px;
+}
+.bigButton.simpleButton {
+	font-size: large;
+}
+.red {
+	color: red;
+}
+.green {
+	color: green;
+}
+.boldLarger {
+	font-weight: bold;
+	font-size: larger;
+}
+.longInputControls select,.longInputControls input[type=text] {
+	width: 300px;
+}
+
+.longInputControls textarea {
+	width: 300px;
+	height: 100px;
+}

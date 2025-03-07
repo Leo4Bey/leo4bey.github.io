@@ -1,0 +1,129 @@
+function getElementsByClassName(node, classname) {
+    var a = [];
+    var re = new RegExp('(^| )'+classname+'( |$)');
+    var els = node.getElementsByTagName("*");
+    for(var i=0,j=els.length; i<j; i++)
+        if(re.test(els[i].className))a.push(els[i]);
+    return a;
+};
+
+function IsImageOk(img) {
+    // During the onload event, IE correctly identifies any images that
+    // weren’t downloaded as not complete. Others should too. Gecko-based
+    // browsers act like NS4 in that they report this incorrectly.
+	
+	if(img == null) {
+		return false;
+	}
+    if (img.complete != null && !img.complete) {
+        return false;
+    }
+
+    // However, they do have two very useful properties: naturalWidth and
+    // naturalHeight. These give the true size of the image. If it failed
+    // to load, either of these should be zero.
+    if (typeof img.naturalWidth !== "undefined") {
+    	if(img.naturalWidth === 0) {
+            return false;
+        } 
+    }
+    // No other way of checking: assume it’s ok.
+    return true;
+};
+
+function getElementByClass(cssClass) {
+	return getElementsByClassName(document.body, cssClass)[0];
+};
+
+function waitForImage() {
+	var img = getElementByClass(CropImageManager.imgClientClass);
+	if(img.complete) {
+		
+		CropImageManager.initializeCropper();		
+	} else {
+		setTimeout(function() {
+			console.log("waiting for image..");
+			waitForImage();
+			
+		}, 200);
+	}
+	
+};
+function detectIE() {
+    var ua = window.navigator.userAgent;
+    var msie = ua.indexOf('MSIE ');
+    var trident = ua.indexOf('Trident/');
+
+    if (msie > 0) {
+        // IE 10 or older => return version number
+        return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
+    }
+
+    if (trident > 0) {
+        // IE 11 (or newer) => return version number
+        var rv = ua.indexOf('rv:');
+        return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
+    }
+
+    // other browser
+    return false;
+};
+var CropImageManager = {
+		curCrop: null,
+		path: null,
+		imgClientId : "#{rich:clientId('imgPerson')}",
+		imgClientClass: "imageToCrop",
+		
+		attachCropper : function() {
+			if(detectIE()) return;
+			if (this.path != null && this.curCrop != null && this.curCrop.img != null) {
+				this.removeCropper();		
+				
+			}	
+			waitForImage();
+		},
+		
+		initializeCropper: function() {
+			if(IsImageOk(getElementByClass(this.imgClientClass))) {	
+				var w = getElementByClass(this.imgClientClass).width;
+				var h = getElementByClass(this.imgClientClass).height;
+				console.log(this.path);
+				console.log(getElementByClass(this.imgClientClass).src);
+				if(w >= 240 && h >= 294 && this.path != getElementByClass(this.imgClientClass).src) {  
+					console.log("initialize cropper");
+					this.curCrop = this.createCropper();
+					console.log("cropper created, onEndCrop: "+this.curCrop.onEndCrop2);
+					this.path = getElementByClass(this.imgClientClass).src;
+					Draggables.removeObserver();
+				}
+			}
+		},
+		
+		removeCropper: function() {
+			console.log("removing existing cropper....");
+			if( this.curCrop != null && this.curCrop.imgWrap != null  && this.path != getElementByClass(this.imgClientClass).src) {
+				this.curCrop.remove();			    
+				console.log(".....removed cropper!");
+			}
+		},
+
+		createCropper: function() {
+			var w = getElementByClass(this.imgClientClass).width;
+			var h = getElementByClass(this.imgClientClass).height;
+			
+			if(w > h) {
+				w = Math.round(h * 20/25);
+			}
+			else {
+				h = Math.round(w * 25/20);
+			}
+			return new Cropper.Img(getElementByClass(this.imgClientClass).id, { 
+				onEndCrop: onEndCrop2,
+				ratioDim: { x: 200, y: 250 }, 
+				displayOnInit: true,
+				onloadCoords: { x1: 0, y1: 0, x2: w, y2: h }, 
+				minWidth: 240,
+				minHeight: 294,
+			} );	 
+		}
+};
